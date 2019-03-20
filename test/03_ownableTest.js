@@ -1,21 +1,21 @@
-const TestBaseLotteryContract = artifacts.require("./TestBaseLottery.sol");
+const TestBaseGameContract = artifacts.require("./TestBaseGame.sol");
 
 contract('Ownable tests', async (accounts) => {
 
     beforeEach(async function () {
-        BaseLottery = await TestBaseLotteryContract.deployed();
+        BaseGame = await TestBaseGameContract.deployed();
     });
 
     it('check owner function', async function() {
-        let owner = await BaseLottery.owner();
+        let owner = await BaseGame.owner();
 
         assert.equal(owner, accounts[0]);
     });
 
     it('check transferOwnership function', async function() {
         let newOwner = accounts[5];
-        await BaseLottery.transferOwnership(newOwner);
-        let owner = await BaseLottery.owner();
+        await BaseGame.transferOwnership(newOwner);
+        let owner = await BaseGame.owner();
         assert.equal(owner, newOwner);
     });
 
@@ -23,14 +23,14 @@ contract('Ownable tests', async (accounts) => {
         let newOwner = accounts[0];
         let err;
         try {
-            await BaseLottery.transferOwnership(newOwner);
+            await BaseGame.transferOwnership(newOwner);
         } catch (error) {
             err = error;
         }
         assert.ok(err instanceof Error);
 
-        await BaseLottery.transferOwnership(newOwner, {from: accounts[5]});
-        let owner = await BaseLottery.owner();
+        await BaseGame.transferOwnership(newOwner, {from: accounts[5]});
+        let owner = await BaseGame.owner();
         assert.equal(owner, newOwner);
     });
 
@@ -38,7 +38,7 @@ contract('Ownable tests', async (accounts) => {
         let newOwner = 0;
         let err;
         try {
-            await BaseLottery.transferOwnership(newOwner);
+            await BaseGame.transferOwnership(newOwner);
         } catch (error) {
             err = error;
         }

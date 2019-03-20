@@ -1,7 +1,7 @@
 pragma solidity 0.5.2;
 
 
-import "./BaseLottery.sol";
+import "./BaseGame.sol";
 
 
 contract IChecker {
@@ -9,7 +9,7 @@ contract IChecker {
 }
 
 
-contract JackPot is BaseLottery {
+contract JackPot is BaseGame {
 
     IChecker public checker;
 
@@ -24,7 +24,7 @@ contract JackPot is BaseLottery {
         address _checker
     )
         public
-        BaseLottery(_rng, _period) {
+        BaseGame(_rng, _period) {
             require(_checker != address(0), "");
 
             checker = IChecker(_checker);
@@ -34,24 +34,24 @@ contract JackPot is BaseLottery {
 
     }
 
-    function processLottery() public payable onlyChecker {
+    function processGame() public payable onlyChecker {
         rounds[currentRound].state = RoundState.WAIT_RESULT;
         emit RoundStateChanged(currentRound, rounds[currentRound].state);
+        iRNG(rng).update.value(msg.value)(currentRound, rounds[currentRound].nonce, 0);
         currentRound = currentRound.add(1);
         rounds[currentRound].startRoundTime = getCurrentTime();
         rounds[currentRound].state = RoundState.ACCEPT_FUNDS;
         emit RoundStateChanged(currentRound, rounds[currentRound].state);
-        iRNG(rng).update.value(msg.value)(currentRound, rounds[currentRound].nonce, 0);
     }
 
-    function startLottery(uint _startPeriod) public payable onlyLotteryContract {
+    function startGame(uint _startPeriod) public payable onlyGameContract {
         _startPeriod;
         currentRound = 1;
         uint time = getCurrentTime();
         rounds[currentRound].startRoundTime = time;
         rounds[currentRound].state = RoundState.ACCEPT_FUNDS;
         emit RoundStateChanged(currentRound, rounds[currentRound].state);
-        emit LotteryStarted(time);
+        emit GameStarted(time);
         checker.update.value(msg.value)();
     }
 
@@ -79,14 +79,10 @@ contract JackPot is BaseLottery {
         emit RoundStateChanged(_round, rounds[_round].state);
         emit RoundProcecced(_round, rounds[_round].winners, rounds[_round].winningTickets, rounds[_round].roundFunds);
 
-        currentRound = currentRound.add(1);
-        rounds[currentRound].state = RoundState.ACCEPT_FUNDS;
-
-        emit RoundStateChanged(_round, rounds[_round].state);
         return true;
     }
 
-    function buyTickets(address _participant) public payable onlyLotteryContract {
+    function buyTickets(address _participant) public payable onlyGameContract {
         require(msg.value > 0, "");
 
         uint ticketsCount = msg.value.div(ticketPrice);

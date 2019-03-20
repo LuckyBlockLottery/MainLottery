@@ -1,21 +1,21 @@
 const RNGContract = artifacts.require("./RNG.sol");
-const BaseLotteryContract = artifacts.require("./BaseLottery.sol");
-const MainLotteryContract = artifacts.require("./MainLottery.sol");
-const DailyLotteryContract = artifacts.require("./DailyLottery.sol");
-const WeeklyLotteryContract = artifacts.require("./WeeklyLottery.sol");
-const MonthlyLotteryContract = artifacts.require("./MonthlyLottery.sol");
-const YearlyLotteryContract = artifacts.require("./YearlyLottery.sol");
+const BaseGameContract = artifacts.require("./BaseGame.sol");
+const HourlyGameContract = artifacts.require("./HourlyGame.sol");
+const DailyGameContract = artifacts.require("./DailyGame.sol");
+const WeeklyGameContract = artifacts.require("./WeeklyGame.sol");
+const MonthlyGameContract = artifacts.require("./MonthlyGame.sol");
+const YearlyGameContract = artifacts.require("./YearlyGame.sol");
 const JackPotContract = artifacts.require("./JackPot.sol");
 const SuperJackPotContract = artifacts.require("./SuperJackPot.sol");
 const JackPotCheckerContract = artifacts.require("./JackPotChecker.sol");
 const KYCWhitelistContract = artifacts.require("./KYCWhitelist.sol");
 const ManagementContract = artifacts.require("./Management.sol");
-const TestBaseLotteryContract = artifacts.require("./TestBaseLottery.sol");
-const TestMainLotteryContract = artifacts.require("./TestMainLottery.sol");
-const TestDailyLotteryContract = artifacts.require("./TestDailyLottery.sol");
-const TestWeeklyLotteryContract = artifacts.require("./TestWeeklyLottery.sol");
-const TestMonthlyLotteryContract = artifacts.require("./TestMonthlyLottery.sol");
-const TestYearlyLotteryContract = artifacts.require("./TestYearlyLottery.sol");
+const TestBaseGameContract = artifacts.require("./TestBaseGame.sol");
+const TestHourlyGameContract = artifacts.require("./TestHourlyGame.sol");
+const TestDailyGameContract = artifacts.require("./TestDailyGame.sol");
+const TestWeeklyGameContract = artifacts.require("./TestWeeklyGame.sol");
+const TestMonthlyGameContract = artifacts.require("./TestMonthlyGame.sol");
+const TestYearlyGameContract = artifacts.require("./TestYearlyGame.sol");
 const TestJackPotContract = artifacts.require("./TestJackPot.sol");
 const TestSuperJackPotContract = artifacts.require("./TestSuperJackPot.sol");
 const RandaoContract = artifacts.require("./Randao.sol");
@@ -23,7 +23,7 @@ const AuxContractContract= artifacts.require("./AuxContract.sol");
 
 module.exports = async function(deployer, network, accounts) {
     let BasePeriod = 121;
-    let MainPeriod = 61;
+    let HourlyPeriod = 61;
     let DailyPeriod = 121;
     let WeeklyPeriod = 181;
     let MonthlyPeriod = 240;
@@ -42,71 +42,73 @@ module.exports = async function(deployer, network, accounts) {
             await deployer.deploy(RNGContract, true);
             await deployer.deploy(KYCWhitelistContract);
 
-            await deployer.link(RNGContract, TestBaseLotteryContract);
-            await deployer.link(KYCWhitelistContract, TestBaseLotteryContract);
-            await deployer.deploy(TestBaseLotteryContract, RNGContract.address, BasePeriod);
+            await deployer.link(RNGContract, TestBaseGameContract);
+            await deployer.link(KYCWhitelistContract, TestBaseGameContract);
+            await deployer.deploy(TestBaseGameContract, RNGContract.address, BasePeriod);
 
 
-            await deployer.link(RNGContract, TestDailyLotteryContract);
-            await deployer.link(KYCWhitelistContract, TestDailyLotteryContract);
-            await deployer.deploy(TestDailyLotteryContract, RNGContract.address, DailyPeriod);
+            await deployer.link(RNGContract, TestDailyGameContract);
+            await deployer.link(KYCWhitelistContract, TestDailyGameContract);
+            await deployer.deploy(TestDailyGameContract, RNGContract.address, DailyPeriod);
 
-            await deployer.link(RNGContract, TestWeeklyLotteryContract);
-            await deployer.link(KYCWhitelistContract, TestWeeklyLotteryContract);
-            await deployer.deploy(TestWeeklyLotteryContract, RNGContract.address, WeeklyPeriod);
+            await deployer.link(RNGContract, TestWeeklyGameContract);
+            await deployer.link(KYCWhitelistContract, TestWeeklyGameContract);
+            await deployer.deploy(TestWeeklyGameContract, RNGContract.address, WeeklyPeriod);
 
-            await deployer.link(RNGContract, TestMonthlyLotteryContract);
-            await deployer.link(KYCWhitelistContract, TestMonthlyLotteryContract);
-            await deployer.deploy(TestMonthlyLotteryContract, RNGContract.address, MonthlyPeriod);
+            await deployer.link(RNGContract, TestMonthlyGameContract);
+            await deployer.link(KYCWhitelistContract, TestMonthlyGameContract);
+            await deployer.deploy(TestMonthlyGameContract, RNGContract.address, MonthlyPeriod);
 
-            await deployer.link(RNGContract, TestYearlyLotteryContract);
-            await deployer.link(KYCWhitelistContract, TestYearlyLotteryContract);
-            await deployer.deploy(TestYearlyLotteryContract, RNGContract.address, YearlyPeriod);
+            await deployer.link(RNGContract, TestYearlyGameContract);
+            await deployer.link(KYCWhitelistContract, TestYearlyGameContract);
+            await deployer.deploy(TestYearlyGameContract, RNGContract.address, YearlyPeriod);
 
             await deployer.deploy(JackPotCheckerContract);
 
             await deployer.link(RNGContract, TestJackPotContract);
+            await deployer.link(JackPotCheckerContract, TestJackPotContract);
             await deployer.link(KYCWhitelistContract, TestJackPotContract);
             await deployer.deploy(TestJackPotContract, RNGContract.address, JackPotPeriod, JackPotCheckerContract.address);
 
             await deployer.link(RNGContract, TestSuperJackPotContract);
+            await deployer.link(JackPotCheckerContract, TestSuperJackPotContract);
             await deployer.link(KYCWhitelistContract, TestSuperJackPotContract);
             await deployer.deploy(TestSuperJackPotContract, RNGContract.address, SuperJackPotPeriod, JackPotCheckerContract.address);
 
-            await deployer.link(RNGContract, TestMainLotteryContract);
-            await deployer.link(TestDailyLotteryContract, TestMainLotteryContract);
-            await deployer.link(TestWeeklyLotteryContract, TestMainLotteryContract);
-            await deployer.link(TestMonthlyLotteryContract, TestMainLotteryContract);
-            await deployer.link(TestYearlyLotteryContract, TestMainLotteryContract);
-            await deployer.link(TestJackPotContract, TestMainLotteryContract);
-            await deployer.link(TestSuperJackPotContract, TestMainLotteryContract);
-            await deployer.link(KYCWhitelistContract, TestMainLotteryContract);
+            await deployer.link(RNGContract, TestHourlyGameContract);
+            await deployer.link(TestDailyGameContract, TestHourlyGameContract);
+            await deployer.link(TestWeeklyGameContract, TestHourlyGameContract);
+            await deployer.link(TestMonthlyGameContract, TestHourlyGameContract);
+            await deployer.link(TestYearlyGameContract, TestHourlyGameContract);
+            await deployer.link(TestJackPotContract, TestHourlyGameContract);
+            await deployer.link(TestSuperJackPotContract, TestHourlyGameContract);
+            await deployer.link(KYCWhitelistContract, TestHourlyGameContract);
             await deployer.deploy(
-                TestMainLotteryContract,
+                TestHourlyGameContract,
                 RNGContract.address,
-                MainPeriod,
-                TestDailyLotteryContract.address,
-                TestWeeklyLotteryContract.address,
-                TestMonthlyLotteryContract.address,
-                TestYearlyLotteryContract.address,
+                HourlyPeriod,
+                TestDailyGameContract.address,
+                TestWeeklyGameContract.address,
+                TestMonthlyGameContract.address,
+                TestYearlyGameContract.address,
                 TestJackPotContract.address,
                 TestSuperJackPotContract.address
             );
 
-            await deployer.link(TestMainLotteryContract, ManagementContract);
-            await deployer.link(TestDailyLotteryContract, ManagementContract);
-            await deployer.link(TestWeeklyLotteryContract, ManagementContract);
-            await deployer.link(TestMonthlyLotteryContract, ManagementContract);
-            await deployer.link(TestYearlyLotteryContract, ManagementContract);
+            await deployer.link(TestHourlyGameContract, ManagementContract);
+            await deployer.link(TestDailyGameContract, ManagementContract);
+            await deployer.link(TestWeeklyGameContract, ManagementContract);
+            await deployer.link(TestMonthlyGameContract, ManagementContract);
+            await deployer.link(TestYearlyGameContract, ManagementContract);
             await deployer.link(TestJackPotContract, ManagementContract);
             await deployer.link(TestSuperJackPotContract, ManagementContract);
             await deployer.deploy(
                 ManagementContract,
-                TestMainLotteryContract.address,
-                TestDailyLotteryContract.address,
-                TestWeeklyLotteryContract.address,
-                TestMonthlyLotteryContract.address,
-                TestYearlyLotteryContract.address,
+                TestHourlyGameContract.address,
+                TestDailyGameContract.address,
+                TestWeeklyGameContract.address,
+                TestMonthlyGameContract.address,
+                TestYearlyGameContract.address,
                 TestJackPotContract.address,
                 TestSuperJackPotContract.address
             );
@@ -124,25 +126,25 @@ module.exports = async function(deployer, network, accounts) {
             await deployer.deploy(RNGContract);
             await deployer.deploy(KYCWhitelistContract);
 
-            await deployer.link(RNGContract, BaseLotteryContract);
-            await deployer.link(KYCWhitelistContract, BaseLotteryContract);
-            await deployer.deploy(BaseLotteryContract, RNGContract.address, BasePeriod);
+            await deployer.link(RNGContract, BaseGameContract);
+            await deployer.link(KYCWhitelistContract, BaseGameContract);
+            await deployer.deploy(BaseGameContract, RNGContract.address, BasePeriod);
 
-            await deployer.link(RNGContract, DailyLotteryContract);
-            await deployer.link(KYCWhitelistContract, DailyLotteryContract);
-            await deployer.deploy(DailyLotteryContract, RNGContract.address, DailyPeriod);
+            await deployer.link(RNGContract, DailyGameContract);
+            await deployer.link(KYCWhitelistContract, DailyGameContract);
+            await deployer.deploy(DailyGameContract, RNGContract.address, DailyPeriod);
 
-            await deployer.link(RNGContract, WeeklyLotteryContract);
-            await deployer.link(KYCWhitelistContract, WeeklyLotteryContract);
-            await deployer.deploy(WeeklyLotteryContract, RNGContract.address, WeeklyPeriod);
+            await deployer.link(RNGContract, WeeklyGameContract);
+            await deployer.link(KYCWhitelistContract, WeeklyGameContract);
+            await deployer.deploy(WeeklyGameContract, RNGContract.address, WeeklyPeriod);
 
-            await deployer.link(RNGContract, MonthlyLotteryContract);
-            await deployer.link(KYCWhitelistContract, MonthlyLotteryContract);
-            await deployer.deploy(MonthlyLotteryContract, RNGContract.address, MonthlyPeriod);
+            await deployer.link(RNGContract, MonthlyGameContract);
+            await deployer.link(KYCWhitelistContract, MonthlyGameContract);
+            await deployer.deploy(MonthlyGameContract, RNGContract.address, MonthlyPeriod);
 
-            await deployer.link(RNGContract, YearlyLotteryContract);
-            await deployer.link(KYCWhitelistContract, YearlyLotteryContract);
-            await deployer.deploy(YearlyLotteryContract, RNGContract.address, YearlyPeriod);
+            await deployer.link(RNGContract, YearlyGameContract);
+            await deployer.link(KYCWhitelistContract, YearlyGameContract);
+            await deployer.deploy(YearlyGameContract, RNGContract.address, YearlyPeriod);
 
             await deployer.deploy(JackPotCheckerContract);
 
@@ -150,37 +152,37 @@ module.exports = async function(deployer, network, accounts) {
             await deployer.link(KYCWhitelistContract, SuperJackPotContract);
             await deployer.deploy(SuperJackPotContract, RNGContract.address, JackPotPeriod, JackPotCheckerContract.address);
 
-            await deployer.link(RNGContract, MainLotteryContract);
-            await deployer.link(DailyLotteryContract, MainLotteryContract);
-            await deployer.link(WeeklyLotteryContract, MainLotteryContract);
-            await deployer.link(MonthlyLotteryContract, MainLotteryContract);
-            await deployer.link(YearlyLotteryContract, MainLotteryContract);
-            await deployer.link(SuperJackPotContract, MainLotteryContract);
-            await deployer.link(KYCWhitelistContract, MainLotteryContract);
+            await deployer.link(RNGContract, HourlyGameContract);
+            await deployer.link(DailyGameContract, HourlyGameContract);
+            await deployer.link(WeeklyGameContract, HourlyGameContract);
+            await deployer.link(MonthlyGameContract, HourlyGameContract);
+            await deployer.link(YearlyGameContract, HourlyGameContract);
+            await deployer.link(SuperJackPotContract, HourlyGameContract);
+            await deployer.link(KYCWhitelistContract, HourlyGameContract);
             await deployer.deploy(
-                MainLotteryContract,
+                HourlyGameContract,
                 RNGContract.address,
-                MainPeriod,
-                DailyLotteryContract.address,
-                WeeklyLotteryContract.address,
-                MonthlyLotteryContract.address,
-                YearlyLotteryContract.address,
+                HourlyPeriod,
+                DailyGameContract.address,
+                WeeklyGameContract.address,
+                MonthlyGameContract.address,
+                YearlyGameContract.address,
                 SuperJackPotContract.address
             );
 
-            await deployer.link(MainLotteryContract, ManagementContract);
-            await deployer.link(DailyLotteryContract, ManagementContract);
-            await deployer.link(WeeklyLotteryContract, ManagementContract);
-            await deployer.link(MonthlyLotteryContract, ManagementContract);
-            await deployer.link(YearlyLotteryContract, ManagementContract);
+            await deployer.link(HourlyGameContract, ManagementContract);
+            await deployer.link(DailyGameContract, ManagementContract);
+            await deployer.link(WeeklyGameContract, ManagementContract);
+            await deployer.link(MonthlyGameContract, ManagementContract);
+            await deployer.link(YearlyGameContract, ManagementContract);
             await deployer.link(SuperJackPotContract, ManagementContract);
             await deployer.deploy(
                 ManagementContract,
-                MainLotteryContract.address,
-                DailyLotteryContract.address,
-                WeeklyLotteryContract.address,
-                MonthlyLotteryContract.address,
-                YearlyLotteryContract.address,
+                HourlyGameContract.address,
+                DailyGameContract.address,
+                WeeklyGameContract.address,
+                MonthlyGameContract.address,
+                YearlyGameContract.address,
                 SuperJackPotContract.address
             );
 

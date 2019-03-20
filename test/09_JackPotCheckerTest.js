@@ -1,7 +1,8 @@
 const RNGContract = artifacts.require("./RNG.sol");
+const TestJackPotContract = artifacts.require("./TestJackPot.sol");
 const TestSuperJackPotContract = artifacts.require("./TestSuperJackPot.sol");
 const JackPotCheckerContract = artifacts.require("./JackPotChecker.sol");
-const TestMainLotteryContract = artifacts.require("./TestMainLottery.sol");
+const TestHourlyGameContract = artifacts.require("./TestHourlyGame.sol");
 
 const BigNumber = require('bignumber.js');
 
@@ -16,13 +17,15 @@ function sleep(ms) {
 contract('JackPotChecker test', async (accounts) => {
 
     let RNG;
-    let MainLottery;
+    let HourlyGame;
+    let JackPot;
     let SuperJackPot;
     let JackPotChecker;
 
     beforeEach(async function () {
         RNG = await RNGContract.deployed();
-        MainLottery = await TestMainLotteryContract.deployed();
+        HourlyGame = await TestHourlyGameContract.deployed();
+        JackPot = await TestJackPotContract.deployed();
         SuperJackPot = await TestSuperJackPotContract.deployed();
         JackPotChecker = await JackPotCheckerContract.deployed();
         await RNG.addAddressToWhitelist(SuperJackPot.address);
@@ -30,7 +33,7 @@ contract('JackPotChecker test', async (accounts) => {
     });
 
 
-    it('setSuperJackPot function', async function() {
+    it('setContracts function', async function() {
         let err;
         try {
             await JackPotChecker.setSuperJackPot(0)
@@ -38,10 +41,13 @@ contract('JackPotChecker test', async (accounts) => {
             err = error;
         }
         assert.ok(err instanceof Error);
-        await JackPotChecker.setSuperJackPot(SuperJackPot.address)
+        await JackPotChecker.setContracts(JackPot.address, SuperJackPot.address);
 
-        let jackpot = await JackPotChecker.superJackPot.call();
-        assert.equal(jackpot, SuperJackPot.address, 'jackpot is not correct');
+        let jackpot = await JackPotChecker.jackPot.call();
+        assert.equal(jackpot, JackPot.address, 'jackpot is not correct');
+
+        let superJackpot = await JackPotChecker.superJackPot.call();
+        assert.equal(superJackpot, SuperJackPot.address, 'superJackpot is not correct');
     });
 
     it('callback function', async function() {

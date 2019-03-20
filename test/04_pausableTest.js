@@ -1,20 +1,20 @@
-const TestMainLotteryContract = artifacts.require("./TestMainLottery.sol");
+const TestHourlyGameContract = artifacts.require("./TestHourlyGame.sol");
 
 contract('Pausable tests', async (accounts) => {
 
     beforeEach(async function () {
-        MainLottery = await TestMainLotteryContract.deployed();
+        HourlyGame = await TestHourlyGameContract.deployed();
     });
 
     it('check pause function', async function() {
-        await MainLottery.pause(true);
-        let paused = await MainLottery.paused.call();
+        await HourlyGame.pause(true);
+        let paused = await HourlyGame.paused.call();
         assert(paused);
     });
 
     it('check unpause function', async function() {
-        await MainLottery.pause(false);
-        let paused = await MainLottery.paused.call();
+        await HourlyGame.pause(false);
+        let paused = await HourlyGame.paused.call();
         assert(!paused);
     });
 });

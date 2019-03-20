@@ -8,7 +8,7 @@ import "./SafeMath.sol";
 
 
 contract iJackPot {
-    function processLottery() public payable;
+    function processGame() public payable;
     function getCurrentRound() public view returns (uint);
     function getRoundFunds(uint _round) public view returns (uint);
 }
@@ -36,7 +36,7 @@ contract JackPotChecker is usingOraclize, Ownable {
 
     event NewOraclizeQuery(string description);
     event NewPrice(uint price);
-    event CallbackIsFailed(address lottery, bytes32 queryId);
+    event CallbackIsFailed(address game, bytes32 queryId);
     event Withdraw(address to, uint amount);
 
     constructor () public {
@@ -60,7 +60,7 @@ contract JackPotChecker is usingOraclize, Ownable {
     }
 
     function update() public payable {
-        require(msg.sender == oraclize_cbAddress() || msg.sender == address(owner) || msg.sender == address(superJackPot));
+        require(msg.sender == oraclize_cbAddress() || msg.sender == address(owner) || msg.sender == address(superJackPot) || msg.sender == address(jackPot));
 
         if (oraclize_getPrice("URL", CUSTOM_GASLIMIT) > address(this).balance) {
             emit NewOraclizeQuery("Oraclize query was NOT sent, please add some ETH to cover for the query fee");
@@ -80,7 +80,7 @@ contract JackPotChecker is usingOraclize, Ownable {
         uint roundFunds = jackPot.getRoundFunds(currentRound);
 
         if (ETHInUSD.mul(roundFunds).div(10**18) >= jackPotStartValue) {
-            jackPot.processLottery();
+            jackPot.processGame();
         }
     }
 
@@ -89,7 +89,7 @@ contract JackPotChecker is usingOraclize, Ownable {
         uint roundFunds = superJackPot.getRoundFunds(currentRound);
 
         if (ETHInUSD.mul(roundFunds).div(10**18) >= superJackPotStartValue) {
-            superJackPot.processLottery();
+            superJackPot.processGame();
         }
     }
 

@@ -1,7 +1,7 @@
 const RNGContract = artifacts.require("./RNG.sol");
 const TestSuperJackPotContract = artifacts.require("./TestSuperJackPot.sol");
 const JackPotCheckerContract = artifacts.require("./JackPotChecker.sol");
-const TestMainLotteryContract = artifacts.require("./TestMainLottery.sol");
+const TestHourlyGameContract = artifacts.require("./TestHourlyGame.sol");
 
 const BigNumber = web3.BigNumber;
 
@@ -12,13 +12,13 @@ require('chai')
 contract('SuperJackPot test', async (accounts) => {
 
     let RNG;
-    let MainLottery;
+    let HourlyGame;
     let SuperJackPot;
     let JackPotChecker;
 
     beforeEach(async function () {
         RNG = await RNGContract.deployed();
-        MainLottery = await TestMainLotteryContract.deployed();
+        HourlyGame = await TestHourlyGameContract.deployed();
         SuperJackPot = await TestSuperJackPotContract.deployed();
         JackPotChecker = await JackPotCheckerContract.deployed();
         await RNG.addAddressToWhitelist(SuperJackPot.address);
@@ -29,7 +29,7 @@ contract('SuperJackPot test', async (accounts) => {
         let err;
         let value = web3.utils.toWei("1", "ether");
         try {
-            await SuperJackPot.processLottery({value:value})
+            await SuperJackPot.processGame({value:value})
         } catch (error) {
             err = error;
         }
@@ -46,10 +46,10 @@ contract('SuperJackPot test', async (accounts) => {
 
     });
 
-    it('processLottery function', async function(){
+    it('processGame function', async function(){
         let value = web3.utils.toWei("1", "ether");
         await RNG.setTestId('0x0');
-        await SuperJackPot.processLottery({value:value});
+        await SuperJackPot.processGame({value:value});
         await SuperJackPot.setChecker(JackPotChecker.address);
     });
 

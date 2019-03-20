@@ -1,7 +1,7 @@
 pragma solidity 0.5.2;
 
 
-import "./BaseLottery.sol";
+import "./BaseGame.sol";
 
 
 contract IChecker {
@@ -9,7 +9,7 @@ contract IChecker {
 }
 
 
-contract SuperJackPot is BaseLottery {
+contract SuperJackPot is BaseGame {
 
     IChecker public checker;
     uint constant public SUPERJACKPOT_ORGANISER_SHARE = 20;          // 20% to organiser
@@ -26,7 +26,7 @@ contract SuperJackPot is BaseLottery {
         address _checker
     )
         public
-        BaseLottery(_rng, _period) {
+        BaseGame(_rng, _period) {
             require(_checker != address(0), "");
 
             checker = IChecker(_checker);
@@ -36,24 +36,24 @@ contract SuperJackPot is BaseLottery {
 
     }
 
-    function processLottery() public payable onlyChecker {
+    function processGame() public payable onlyChecker {
         rounds[currentRound].state = RoundState.WAIT_RESULT;
         emit RoundStateChanged(currentRound, rounds[currentRound].state);
+        iRNG(rng).update.value(msg.value)(currentRound, rounds[currentRound].nonce, 0);
         currentRound = currentRound.add(1);
         rounds[currentRound].startRoundTime = getCurrentTime();
         rounds[currentRound].state = RoundState.ACCEPT_FUNDS;
         emit RoundStateChanged(currentRound, rounds[currentRound].state);
-        iRNG(rng).update.value(msg.value)(currentRound, rounds[currentRound].nonce, 0);
     }
 
-    function startLottery(uint _startPeriod) public payable onlyLotteryContract {
+    function startGame(uint _startPeriod) public payable onlyGameContract {
         _startPeriod;
         currentRound = 1;
         uint time = getCurrentTime();
         rounds[currentRound].startRoundTime = time;
         rounds[currentRound].state = RoundState.ACCEPT_FUNDS;
         emit RoundStateChanged(currentRound, rounds[currentRound].state);
-        emit LotteryStarted(time);
+        emit GameStarted(time);
         checker.update.value(msg.value)();
     }
 
@@ -81,14 +81,10 @@ contract SuperJackPot is BaseLottery {
         emit RoundStateChanged(_round, rounds[_round].state);
         emit RoundProcecced(_round, rounds[_round].winners, rounds[_round].winningTickets, rounds[_round].roundFunds);
 
-        currentRound = currentRound.add(1);
-        rounds[currentRound].state = RoundState.ACCEPT_FUNDS;
-
-        emit RoundStateChanged(_round, rounds[_round].state);
         return true;
     }
 
-    function buyTickets(address _participant) public payable onlyLotteryContract {
+    function buyTickets(address _participant) public payable onlyGameContract {
         require(msg.value > 0, "");
 
         uint ticketsCount = msg.value.div(ticketPrice);
@@ -109,31 +105,28 @@ contract SuperJackPot is BaseLottery {
         require(_fromRound <= _toRound, "");
         require(_participant != address(0), "");
 
-        if (KYCWhitelist.isWhitelisted(_participant)) {
-            uint funds;
+        uint funds;
 
-            for (uint i = _fromRound; i <= _toRound; i++) {
+        for (uint i = _fromRound; i <= _toRound; i++) {
 
-                if (rounds[i].state == RoundState.SUCCESS
-                    && rounds[i].sendGain[_participant] == false) {
+            if (rounds[i].state == RoundState.SUCCESS
+                && rounds[i].sendGain[_participant] == false) {
 
-                    rounds[i].sendGain[_participant] = true;
-                    funds = funds.add(getWinningFunds(i, _participant));
-                }
+                rounds[i].sendGain[_participant] = true;
+                funds = funds.add(getWinningFunds(i, _participant));
             }
-
-            require(funds > 0, "");
-
-            uint fundsToOrganiser = funds.mul(SUPERJACKPOT_ORGANISER_SHARE).div(100);
-            uint fundsToWinner = funds.mul(SUPERJACKPOT_WINNER_SHARE).div(100);
-
-            _participant.transfer(fundsToWinner);
-            organiser.transfer(fundsToOrganiser);
-
-            emit Withdraw(_participant, fundsToWinner, _fromRound, _toRound);
-            emit Withdraw(organiser, fundsToOrganiser, _fromRound, _toRound);
-        } else {
-            emit AddressIsNotAddedInKYC(_participant);
         }
+
+        require(funds > 0, "");
+
+        uint fundsToOrganiser = funds.mul(SUPERJACKPOT_ORGANISER_SHARE).div(100);
+        uint fundsToWinner = funds.mul(SUPERJACKPOT_WINNER_SHARE).div(100);
+
+        _participant.transfer(fundsToWinner);
+        organiser.transfer(fundsToOrganiser);
+
+        emit Withdraw(_participant, fundsToWinner, _fromRound, _toRound);
+        emit Withdraw(organiser, fundsToOrganiser, _fromRound, _toRound);
+
     }
 }

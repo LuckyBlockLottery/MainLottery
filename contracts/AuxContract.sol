@@ -22,7 +22,7 @@ contract AuxContract {
         rng = iRNG(_rng);
     }
 
-    function startLottery(uint round) payable public {
+    function startGame(uint round) payable public {
         rng.update.value(msg.value)(round, 0, 0);
     }
 

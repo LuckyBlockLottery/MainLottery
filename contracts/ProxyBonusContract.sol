@@ -4,11 +4,11 @@ import "./Manageable.sol";
 import "./SafeMath.sol";
 
 
-interface iMainLottery {
+interface iHourlyGame {
     function getCurrentRound() external view returns (uint);
     function buyBonusTickets(
         address _participant,
-        uint _mainTicketsCount,
+        uint _hourlyTicketsCount,
         uint _dailyTicketsCount,
         uint _weeklyTicketsCount,
         uint _monthlyTicketsCount,
@@ -18,7 +18,7 @@ interface iMainLottery {
     ) external payable;
 }
 
-interface iAllLottery {
+interface iAllGame {
     function getCurrentRound() external view returns (uint);
 }
 
@@ -38,28 +38,28 @@ contract ProxyBonusContract is Manageable {
 
     IERC20 public token;
 
-    address mainLottery;
-    address dailyLottery;
-    address weeklyLottery;
-    address monthlyLottery;
-    address yearlyLottery;
+    address hourlyGame;
+    address dailyGame;
+    address weeklyGame;
+    address monthlyGame;
+    address yearlyGame;
     address jackPot;
     address superJackPot;
 
-    mapping(address => uint) lotteryLimits;
+    mapping(address => uint) gameLimits;
 
-    // Lottery => round => amount
+    // Game => round => amount
     mapping(address => mapping (uint => uint)) public ticketRoundAmount;
 
     uint public betLimit = 100;
 
     constructor (
         address _token,
-        address _mainLottery,
-        address _dailyLottery,
-        address _weeklyLottery,
-        address _monthlyLottery,
-        address _yearlyLottery,
+        address _hourlyGame,
+        address _dailyGame,
+        address _weeklyGame,
+        address _monthlyGame,
+        address _yearlyGame,
         address _jackPot,
         address _superJackPot
     )
@@ -67,22 +67,22 @@ contract ProxyBonusContract is Manageable {
     {
         require(_token != address(0));
 
-        require(_mainLottery != address(0), "");
+        require(_hourlyGame != address(0), "");
 
-        require(_dailyLottery != address(0), "");
-        require(_weeklyLottery != address(0), "");
-        require(_monthlyLottery != address(0), "");
-        require(_yearlyLottery != address(0), "");
+        require(_dailyGame != address(0), "");
+        require(_weeklyGame != address(0), "");
+        require(_monthlyGame != address(0), "");
+        require(_yearlyGame != address(0), "");
         require(_jackPot != address(0), "");
         require(_superJackPot != address(0), "");
 
         token = IERC20(_token);
 
-        mainLottery = _mainLottery;
-        dailyLottery = _dailyLottery;
-        weeklyLottery = _weeklyLottery;
-        monthlyLottery = _monthlyLottery;
-        yearlyLottery = _yearlyLottery;
+        hourlyGame = _hourlyGame;
+        dailyGame = _dailyGame;
+        weeklyGame = _weeklyGame;
+        monthlyGame = _monthlyGame;
+        yearlyGame = _yearlyGame;
         jackPot = _jackPot;
         superJackPot = _superJackPot;
     }
@@ -92,17 +92,17 @@ contract ProxyBonusContract is Manageable {
         require(token.transferFrom(msg.sender, address(this), _luckyBacksAmount), "");
         require(_luckyBacksAmount <= betLimit);
 
-        uint mainTicketsAmount = calcAmount(mainLottery, _luckyBacksAmount);
-        uint dailyTicketsAmount = calcAmount(dailyLottery, _luckyBacksAmount);
-        uint weeklyTicketsAmount = calcAmount(weeklyLottery, _luckyBacksAmount);
-        uint monthlyTicketsAmount = calcAmount(monthlyLottery, _luckyBacksAmount);
-        uint yearlyTicketsAmount = calcAmount(yearlyLottery, _luckyBacksAmount);
+        uint hourlyTicketsAmount = calcAmount(hourlyGame, _luckyBacksAmount);
+        uint dailyTicketsAmount = calcAmount(dailyGame, _luckyBacksAmount);
+        uint weeklyTicketsAmount = calcAmount(weeklyGame, _luckyBacksAmount);
+        uint monthlyTicketsAmount = calcAmount(monthlyGame, _luckyBacksAmount);
+        uint yearlyTicketsAmount = calcAmount(yearlyGame, _luckyBacksAmount);
         uint jackPotTicketsAmount = calcAmount(jackPot, _luckyBacksAmount);
         uint superJackPotTicketsAmount = calcAmount(superJackPot, _luckyBacksAmount);
 
-        iMainLottery(mainLottery).buyBonusTickets(
+        iHourlyGame(hourlyGame).buyBonusTickets(
             _participant,
-            mainTicketsAmount,
+            hourlyTicketsAmount,
             dailyTicketsAmount,
             weeklyTicketsAmount,
             monthlyTicketsAmount,
@@ -112,28 +112,28 @@ contract ProxyBonusContract is Manageable {
         );
     }
 
-    function calcAmount(address _lottery, uint _luckyBacksAmount) public returns (uint) {
+    function calcAmount(address _game, uint _luckyBacksAmount) public returns (uint) {
         uint ticketsAmount = _luckyBacksAmount;
-        uint currentRoundTicketsAmount = getRoundTicketsAmount(_lottery);
-        uint lotteryRoundLimit = getRoundLimit(_lottery);
+        uint currentRoundTicketsAmount = getRoundTicketsAmount(_game);
+        uint gameRoundLimit = getRoundLimit(_game);
 
-        if (currentRoundTicketsAmount.add(ticketsAmount) > lotteryRoundLimit) {
-            ticketsAmount = lotteryRoundLimit.sub(currentRoundTicketsAmount);
+        if (currentRoundTicketsAmount.add(ticketsAmount) > gameRoundLimit) {
+            ticketsAmount = gameRoundLimit.sub(currentRoundTicketsAmount);
         }
 
-        addRoundTicketsAmount(_lottery, ticketsAmount);
+        addRoundTicketsAmount(_game, ticketsAmount);
 
         return ticketsAmount;
     }
 
-    function getRoundTicketsAmount(address _lottery) public view returns (uint) {
-        uint currentRound = iAllLottery(_lottery).getCurrentRound();
-        return ticketRoundAmount[_lottery][currentRound];
+    function getRoundTicketsAmount(address _game) public view returns (uint) {
+        uint currentRound = iAllGame(_game).getCurrentRound();
+        return ticketRoundAmount[_game][currentRound];
     }
 
-    function addRoundTicketsAmount(address _lottery, uint _amount) internal {
-        uint currentRound = iAllLottery(_lottery).getCurrentRound();
-        ticketRoundAmount[_lottery][currentRound] =  ticketRoundAmount[_lottery][currentRound].add(_amount);
+    function addRoundTicketsAmount(address _game, uint _amount) internal {
+        uint currentRound = iAllGame(_game).getCurrentRound();
+        ticketRoundAmount[_game][currentRound] =  ticketRoundAmount[_game][currentRound].add(_amount);
     }
 
     function changeToken(address _token) public onlyManager {
@@ -141,7 +141,7 @@ contract ProxyBonusContract is Manageable {
     }
 
     function changeAllRoundLimits(
-        uint _mainRoundLimit,
+        uint _hourlyRoundLimit,
         uint _dailyRoundLimit,
         uint _weeklyRoundLimit,
         uint _monthlyRoundLimit,
@@ -152,21 +152,21 @@ contract ProxyBonusContract is Manageable {
     public
     onlyManager
     {
-        changeRoundLimit(mainLottery,_mainRoundLimit);
-        changeRoundLimit(dailyLottery, _dailyRoundLimit);
-        changeRoundLimit(weeklyLottery, _weeklyRoundLimit);
-        changeRoundLimit(monthlyLottery, _monthlyRoundLimit);
-        changeRoundLimit(yearlyLottery, _yearlyRoundLimit);
+        changeRoundLimit(hourlyGame,_hourlyRoundLimit);
+        changeRoundLimit(dailyGame, _dailyRoundLimit);
+        changeRoundLimit(weeklyGame, _weeklyRoundLimit);
+        changeRoundLimit(monthlyGame, _monthlyRoundLimit);
+        changeRoundLimit(yearlyGame, _yearlyRoundLimit);
         changeRoundLimit(jackPot, _jackPotRoundLimit);
         changeRoundLimit(superJackPot, _superJackPotRoundLimit);
     }
 
-    function changeRoundLimit(address _lottery, uint _roundLimit) public onlyManager {
-        lotteryLimits[_lottery] = _roundLimit;
+    function changeRoundLimit(address _game, uint _roundLimit) public onlyManager {
+        gameLimits[_game] = _roundLimit;
     }
 
-    function getRoundLimit(address _lottery) public view returns (uint) {
-        return lotteryLimits[_lottery];
+    function getRoundLimit(address _game) public view returns (uint) {
+        return gameLimits[_game];
     }
 
     function setBetLimit(uint _betLimit) public onlyManager {

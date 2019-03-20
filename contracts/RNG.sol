@@ -3,11 +3,11 @@ pragma experimental ABIEncoderV2;
 
 //import "github.com/oraclize/ethereum-api/oraclizeAPI.sol";
 import "./oraclizeAPI_mock.sol";
-import "./LotteryWhitelist.sol";
+import "./GameWhitelist.sol";
 import "./Ownable.sol";
 
 
-contract iLotteries {
+contract iGames {
     function processRound(uint round, uint randomNumber) public payable returns (bool);
     function getPeriod() public view returns (uint);
 }
@@ -25,11 +25,11 @@ contract iRandao {
 contract RNG is usingOraclize, Ownable, Whitelist {
 
     struct Request {
-        address lottery;
+        address game;
         uint round;
     }
-    
-    mapping(bytes32 => Request) public requests; // requests from lottery to oraclize
+
+    mapping(bytes32 => Request) public requests; // requests from game to oraclize
 
     uint public callbackGas = 2000000;
 
@@ -37,8 +37,8 @@ contract RNG is usingOraclize, Ownable, Whitelist {
 
     address randao;
 
-    event RequestIsSended(address lottery, uint round, bytes32 queryId);
-    event CallbackIsNotCorrect(address lottery, bytes32  queryId);
+    event RequestIsSended(address game, uint round, bytes32 queryId);
+    event CallbackIsNotCorrect(address game, bytes32  queryId);
     event Withdraw(address to, uint value);
 
     constructor(bool _useOraclize) public {
@@ -54,9 +54,9 @@ contract RNG is usingOraclize, Ownable, Whitelist {
         if (msg.sender != oraclize_cbAddress()) revert("");
 
         if (oraclize_randomDS_proofVerify__returnCode(_queryId, _result, _proof) != 0) {
-            emit CallbackIsNotCorrect(address(requests[_queryId].lottery), _queryId);
+            emit CallbackIsNotCorrect(address(requests[_queryId].game), _queryId);
         } else {
-            iLotteries temp = iLotteries(requests[_queryId].lottery);
+            iGames temp = iGames(requests[_queryId].game);
 
             assert(temp.processRound(requests[_queryId].round, uint(keccak256(abi.encodePacked(_result)))));
         }
@@ -65,12 +65,12 @@ contract RNG is usingOraclize, Ownable, Whitelist {
     function __callback(bytes32 _queryId, uint _result) public {
         if (msg.sender != randao) revert("");
 
-        iLotteries temp = iLotteries(requests[_queryId].lottery);
+        iGames temp = iGames(requests[_queryId].game);
 
         assert(temp.processRound(requests[_queryId].round, uint(keccak256(abi.encodePacked(_result)))));
 
     }
-    
+
     function update(uint _roundNumber, uint _additionalNonce, uint _period) public payable {
         uint n = 32; // number of random bytes we want the datasource to return
         uint delay = 0; // number of seconds to wait before the execution takes place
@@ -82,12 +82,12 @@ contract RNG is usingOraclize, Ownable, Whitelist {
             queryId = custom_oraclize_newRandomDSQuery(_period, delay, n, callbackGas, _additionalNonce);
         }
 
-        requests[queryId].lottery = msg.sender;
+        requests[queryId].game = msg.sender;
         requests[queryId].round = _roundNumber;
 
         emit RequestIsSended(msg.sender, _roundNumber, queryId);
     }
-    
+
     function withdraw(address payable _to, uint256 _value) public onlyOwner {
         emit Withdraw(_to, _value);
         _to.transfer(_value);
@@ -108,7 +108,7 @@ contract RNG is usingOraclize, Ownable, Whitelist {
     }
 
     function getRequest(bytes32 _queryId) public view returns (address, uint) {
-        return (requests[_queryId].lottery, requests[_queryId].round);
+        return (requests[_queryId].game, requests[_queryId].round);
     }
 
     function getCallbackGas() public view returns (uint) {
@@ -126,7 +126,7 @@ contract RNG is usingOraclize, Ownable, Whitelist {
         returns (bytes32)
     {
         require((_nbytes > 0) && (_nbytes <= 32), "");
-        
+
         // Convert from seconds to ledger timer ticks
         _delay *= 10;
         bytes memory nbytes = new bytes(1);
@@ -134,22 +134,22 @@ contract RNG is usingOraclize, Ownable, Whitelist {
         bytes memory unonce = new bytes(32);
         bytes memory sessionKeyHash = new bytes(32);
         bytes32 sessionKeyHash_bytes32 = oraclize_randomDS_getSessionPubKeyHash();
-        
+
         assembly {
             mstore(unonce, 0x20)
             mstore(add(unonce, 0x20), xor(blockhash(sub(number, 1)), xor(coinbase, xor(timestamp, _additionalNonce))))
             mstore(sessionKeyHash, 0x20)
             mstore(add(sessionKeyHash, 0x20), sessionKeyHash_bytes32)
         }
-        
+
         bytes memory delay = new bytes(32);
-        
+
         assembly {
             mstore(add(delay, 0x20), _delay)
         }
 
         bytes memory delay_bytes8 = new bytes(8);
-        
+
         copyBytes(delay, 24, 8, delay_bytes8, 0);
 
         bytes[4] memory args = [unonce, nbytes, sessionKeyHash, delay];

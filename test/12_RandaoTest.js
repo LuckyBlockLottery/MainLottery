@@ -51,10 +51,10 @@ contract('Randao tests', async (accounts) => {
 
 
         it('start new campaign by call update function in RNG from lottery', async () => {
-            let toStartLottery = web3.utils.toWei('1', "ether");
+            let toStartGame = web3.utils.toWei('1', "ether");
             await AuxContract.send(web3.utils.toWei('1', "ether"));
             await RNG.send(web3.utils.toWei('1', "ether"));
-            await AuxContract.startLottery(0, {value: toStartLottery});
+            await AuxContract.startGame(0, {value: toStartGame});
         });
 
         it('commit function from account1', async () => {
@@ -118,9 +118,9 @@ contract('Randao tests', async (accounts) => {
             let random = await Randao.getRandom.call(0);
             let random_ = web3.utils.toBN(web3.utils.soliditySha3(random));
             await Randao.sendRandomToRNg(0);
-            let randomFromLottery = await AuxContract.random.call();
+            let randomFromGame = await AuxContract.random.call();
 
-            assert.equal(randomFromLottery - random_, 0, 'Random is not correct!');
+            assert.equal(randomFromGame - random_, 0, 'Random is not correct!');
         });
 
         it('getMyBounty test from account1', async () => {
@@ -199,10 +199,10 @@ contract('Randao tests', async (accounts) => {
 
 
         it('start new campaign by call update function in RNG from lottery', async () => {
-            let toStartLottery = web3.utils.toWei('1', "ether");
+            let toStartGame = web3.utils.toWei('1', "ether");
             await AuxContract.send(web3.utils.toWei('1', "ether"));
             await RNG.send(web3.utils.toWei('1', "ether"));
-            await AuxContract.startLottery(1, {value: toStartLottery});
+            await AuxContract.startGame(1, {value: toStartGame});
         });
 
         it('trying commit function from account1 with wrong deposit', async () => {
@@ -287,9 +287,9 @@ contract('Randao tests', async (accounts) => {
             let random = await Randao.getRandom.call(0);
             let random_ = web3.utils.toBN(web3.utils.soliditySha3(random));
             await Randao.sendRandomToRNg(0);
-            let randomFromLottery = await AuxContract.random.call();
+            let randomFromGame = await AuxContract.random.call();
 
-            assert.equal(randomFromLottery - random_, 0, 'Random is not correct!');
+            assert.equal(randomFromGame - random_, 0, 'Random is not correct!');
         });
 
         it('getMyBounty test from account1', async () => {
