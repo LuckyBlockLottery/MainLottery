@@ -1,4 +1,4 @@
-pragma solidity 0.5.2;
+pragma solidity 0.5.6;
 
 contract iRNG {
     function update(uint roundNumber, uint additionalNonce, uint period) public payable;

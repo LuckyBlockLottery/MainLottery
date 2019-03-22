@@ -1,4 +1,4 @@
-pragma solidity 0.5.2;
+pragma solidity 0.5.6;
 pragma experimental ABIEncoderV2;
 
 //import "github.com/oraclize/ethereum-api/oraclizeAPI.sol";
@@ -25,7 +25,7 @@ contract JackPotChecker is usingOraclize, Ownable {
     uint public superJackPotStartValue = 40000; //400 USD in cents, ~2 ether, 2 ether for test
     uint public jackPotStartValue = 20000; //200 USD in cents, ~1 ether, 1 ether for test
     uint public ETHInUSD;
-    uint public CUSTOM_GASLIMIT = 350000;
+    uint public CUSTOM_GASLIMIT = 500000;
     uint public timeout = 60; //86400; //1 day in sec
 
     uint public lastCallbackTimestamp;
